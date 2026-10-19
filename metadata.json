@@ -1,0 +1,6 @@
+{
+  "name": "Vanguard UEM - Enterprise Endpoint Management",
+  "description": "Enterprise-grade Unified Endpoint Management (UEM) platform inspired by Hexnode for centralized device enrollment, inventory, policies, compliance, apps, patch management, and remote actions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

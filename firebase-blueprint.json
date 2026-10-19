@@ -1,0 +1,251 @@
+{
+  "entities": {
+    "Organization": {
+      "title": "Organization",
+      "description": "Multi-tenant organization boundary for enterprise UEM isolation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "edition": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "primaryContact": { "type": "string", "maxLength": 120 }
+      },
+      "required": ["id", "name", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Enterprise staff user profile and RBAC role assignment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 150 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "maxLength": 50 },
+        "department": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "maxLength": 30 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "orgId", "role"]
+    },
+    "Device": {
+      "title": "Device",
+      "description": "Managed endpoint inventory record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "hostname": { "type": "string", "maxLength": 150 },
+        "platform": { "type": "string", "maxLength": 50 },
+        "osVersion": { "type": "string", "maxLength": 100 },
+        "model": { "type": "string", "maxLength": 100 },
+        "serialNumber": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "maxLength": 30 },
+        "complianceStatus": { "type": "string", "maxLength": 30 },
+        "assignedUser": { "type": "string", "maxLength": 100 },
+        "department": { "type": "string", "maxLength": 100 },
+        "branch": { "type": "string", "maxLength": 100 },
+        "deviceGroupId": { "type": "string", "maxLength": 128 },
+        "ipAddress": { "type": "string", "maxLength": 60 },
+        "agentVersion": { "type": "string", "maxLength": 50 },
+        "lastCheckIn": { "type": "string", "format": "date-time" },
+        "enrolledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "orgId", "hostname", "platform", "status"]
+    },
+    "EnrollmentToken": {
+      "title": "EnrollmentToken",
+      "description": "Expiring time-bounded token for endpoint onboarding",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "token": { "type": "string", "maxLength": 128 },
+        "platform": { "type": "string", "maxLength": 50 },
+        "department": { "type": "string", "maxLength": 100 },
+        "deviceGroupId": { "type": "string", "maxLength": 128 },
+        "maxUses": { "type": "number" },
+        "usedCount": { "type": "number" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "maxLength": 30 },
+        "createdBy": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["id", "orgId", "token", "platform", "status"]
+    },
+    "DeviceGroup": {
+      "title": "DeviceGroup",
+      "description": "Static and dynamic endpoint grouping",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 250 },
+        "type": { "type": "string", "maxLength": 30 },
+        "deviceCount": { "type": "number" }
+      },
+      "required": ["id", "orgId", "name", "type"]
+    },
+    "Policy": {
+      "title": "Policy",
+      "description": "Endpoint configuration baseline and restriction policy",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 300 },
+        "platform": { "type": "string", "maxLength": 50 },
+        "category": { "type": "string", "maxLength": 50 },
+        "version": { "type": "number" },
+        "priority": { "type": "number" },
+        "enforcementMode": { "type": "string", "maxLength": 30 },
+        "status": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "orgId", "name", "platform", "category", "status"]
+    },
+    "ApplicationPackage": {
+      "title": "ApplicationPackage",
+      "description": "Catalog of managed software binaries and scripts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "publisher": { "type": "string", "maxLength": 100 },
+        "version": { "type": "string", "maxLength": 50 },
+        "platform": { "type": "string", "maxLength": 50 },
+        "architecture": { "type": "string", "maxLength": 30 },
+        "hashSha256": { "type": "string", "maxLength": 64 },
+        "approvalStatus": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "orgId", "name", "version", "platform", "approvalStatus"]
+    },
+    "DeploymentJob": {
+      "title": "DeploymentJob",
+      "description": "Staged deployment ring for software packages",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "packageId": { "type": "string", "maxLength": 128 },
+        "packageName": { "type": "string", "maxLength": 120 },
+        "ring": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "maxLength": 30 },
+        "succeededCount": { "type": "number" },
+        "failedCount": { "type": "number" }
+      },
+      "required": ["id", "orgId", "packageId", "ring", "status"]
+    },
+    "Command": {
+      "title": "Command",
+      "description": "Remote administrative action in the durable execution queue",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "deviceId": { "type": "string", "maxLength": 128 },
+        "action": { "type": "string", "maxLength": 60 },
+        "requestedBy": { "type": "string", "maxLength": 150 },
+        "status": { "type": "string", "maxLength": 30 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "orgId", "deviceId", "action", "status"]
+    },
+    "ComplianceRule": {
+      "title": "ComplianceRule",
+      "description": "Zero-trust compliance benchmark rule",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "platform": { "type": "string", "maxLength": 50 },
+        "severity": { "type": "string", "maxLength": 30 },
+        "category": { "type": "string", "maxLength": 50 },
+        "enabled": { "type": "boolean" }
+      },
+      "required": ["id", "orgId", "name", "platform", "severity", "enabled"]
+    },
+    "SecurityAlert": {
+      "title": "SecurityAlert",
+      "description": "Endpoint threat or noncompliance alert",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "deviceId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "severity": { "type": "string", "maxLength": 30 },
+        "status": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "orgId", "deviceId", "title", "severity", "status"]
+    },
+    "AuditEvent": {
+      "title": "AuditEvent",
+      "description": "Immutable audit record for administrative actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 150 },
+        "action": { "type": "string", "maxLength": 80 },
+        "targetResource": { "type": "string", "maxLength": 80 },
+        "outcome": { "type": "string", "maxLength": 30 },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "orgId", "actorEmail", "action", "targetResource", "outcome", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/organizations/{orgId}": {
+      "schema": "Organization",
+      "description": "Multi-tenant organization boundary and license metadata"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Staff profile, permissions and role assignment"
+    },
+    "/devices/{deviceId}": {
+      "schema": "Device",
+      "description": "Managed endpoint hardware, OS, and status inventory"
+    },
+    "/enrollmentTokens/{tokenId}": {
+      "schema": "EnrollmentToken",
+      "description": "Expiring device onboarding tokens"
+    },
+    "/deviceGroups/{groupId}": {
+      "schema": "DeviceGroup",
+      "description": "Static and dynamic groups of managed endpoints"
+    },
+    "/policies/{policyId}": {
+      "schema": "Policy",
+      "description": "Endpoint configuration profiles and security baselines"
+    },
+    "/applications/{packageId}": {
+      "schema": "ApplicationPackage",
+      "description": "Approved and managed software catalog"
+    },
+    "/deployments/{deploymentId}": {
+      "schema": "DeploymentJob",
+      "description": "Staged deployment jobs across rings"
+    },
+    "/commands/{commandId}": {
+      "schema": "Command",
+      "description": "Remote actions and operational command queue"
+    },
+    "/complianceRules/{ruleId}": {
+      "schema": "ComplianceRule",
+      "description": "Compliance benchmark criteria"
+    },
+    "/securityAlerts/{alertId}": {
+      "schema": "SecurityAlert",
+      "description": "Endpoint security alerts and remediation tracking"
+    },
+    "/auditEvents/{eventId}": {
+      "schema": "AuditEvent",
+      "description": "Immutable security and administrative audit trail"
+    }
+  }
+}
