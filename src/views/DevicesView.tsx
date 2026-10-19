@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Laptop, Search, Filter, Download, Terminal, 
   Plus, CheckSquare, Square, RefreshCw, Lock, 
-  Power, ShieldCheck, AlertCircle, ChevronRight, X
+  Power, ShieldCheck, AlertCircle, ChevronRight, X, 
+  MapPin, CheckCircle2 
 } from 'lucide-react';
 import { useUEM } from '../context/UEMContext';
 import { Platform, DeviceStatus, ComplianceStatus } from '../types/uem';
@@ -10,13 +11,17 @@ import { Platform, DeviceStatus, ComplianceStatus } from '../types/uem';
 interface DevicesViewProps {
   onSelectDevice: (deviceId: string) => void;
   onOpenEnroll: () => void;
+  onOpenBulkEnroll?: () => void;
   onOpenCommand: (deviceId?: string) => void;
+  onOpenTerminal?: (deviceId: string) => void;
 }
 
 export const DevicesView: React.FC<DevicesViewProps> = ({ 
   onSelectDevice, 
   onOpenEnroll,
-  onOpenCommand 
+  onOpenBulkEnroll,
+  onOpenCommand,
+  onOpenTerminal 
 }) => {
   const { devices, exportCsv, dispatchCommand } = useUEM();
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,7 +81,7 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
         <div>
           <h1 className="text-xl font-bold text-slate-100">Device Inventory & Assets</h1>
           <p className="text-xs text-slate-400">
-            Comprehensive multi-platform hardware, software, and compliance repository ({filteredDevices.length} matching)
+            Comprehensive multi-platform hardware, software, geofence, and compliance repository ({filteredDevices.length} matching)
           </p>
         </div>
 
@@ -88,6 +93,15 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
             <Download className="w-3.5 h-3.5 text-indigo-400" />
             <span>Export CSV</span>
           </button>
+          {onOpenBulkEnroll && (
+            <button
+              onClick={onOpenBulkEnroll}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/30 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Bulk Enroll Fleet</span>
+            </button>
+          )}
           <button
             onClick={onOpenEnroll}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all"
@@ -204,7 +218,7 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
                 <th className="px-4 py-3">Hostname & Model</th>
                 <th className="px-4 py-3">Platform & OS</th>
                 <th className="px-4 py-3">Assigned User</th>
-                <th className="px-4 py-3">Department & Branch</th>
+                <th className="px-4 py-3">Geofence Location</th>
                 <th className="px-4 py-3">Security & Encryption</th>
                 <th className="px-4 py-3">Compliance</th>
                 <th className="px-4 py-3">Status</th>
@@ -252,13 +266,30 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
                     {/* User */}
                     <td className="px-4 py-3">
                       <span className="text-slate-200 font-medium block">{device.assignedUser}</span>
-                      <span className="text-[10px] text-slate-400">{device.assignedUserEmail}</span>
+                      <span className="text-[10px] text-slate-400">{device.department}</span>
                     </td>
 
-                    {/* Department */}
+                    {/* Geofence Location */}
                     <td className="px-4 py-3">
-                      <span className="text-slate-300 block">{device.department}</span>
-                      <span className="text-[10px] text-slate-400">{device.branch}</span>
+                      {device.location ? (
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className={`w-3.5 h-3.5 shrink-0 ${
+                            device.location.insideGeofence ? 'text-emerald-400' : 'text-rose-400'
+                          }`} />
+                          <div>
+                            <span className={`text-[10px] font-bold block ${
+                              device.location.insideGeofence ? 'text-emerald-400' : 'text-rose-400'
+                            }`}>
+                              {device.location.insideGeofence ? 'Inside Fence' : 'Breached Fence!'}
+                            </span>
+                            <span className="text-[9px] text-slate-400 truncate max-w-[110px] block">
+                              {device.location.activeGeofenceName || 'Outside zone'}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 text-[10px]">No GPS fix</span>
+                      )}
                     </td>
 
                     {/* Encryption & Security */}
@@ -270,7 +301,7 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
                           {device.isEncrypted ? 'Encrypted' : 'Unencrypted'}
                         </span>
                         {device.antivirusActive && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                          <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400">
                             EDR
                           </span>
                         )}
@@ -302,13 +333,25 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
 
                     {/* Action Menu */}
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => onOpenCommand(device.id)}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 text-[11px] font-semibold border border-slate-700/60"
-                        title="Dispatch Command"
-                      >
-                        Action
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        {onOpenTerminal && (
+                          <button
+                            onClick={() => onOpenTerminal(device.id)}
+                            className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 text-[11px] font-semibold border border-slate-700/60 flex items-center gap-1"
+                            title="Open Remote Terminal Shell"
+                          >
+                            <Terminal className="w-3 h-3" />
+                            <span>Shell</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onOpenCommand(device.id)}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold border border-slate-700/60"
+                          title="Dispatch Remote Action"
+                        >
+                          Action
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

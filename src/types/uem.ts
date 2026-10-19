@@ -23,7 +23,10 @@ export type CommandAction =
   | 'run_script'
   | 'install_package'
   | 'uninstall_package'
-  | 'apply_policy';
+  | 'apply_policy'
+  | 'windows_update_scan'
+  | 'windows_update_install'
+  | 'terminal_exec';
 
 export type CommandStatus = 'Pending' | 'Approved' | 'Queued' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled';
 
@@ -62,6 +65,19 @@ export interface SoftwareApp {
   isProhibited?: boolean;
 }
 
+export interface DeviceLocation {
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number;
+  address?: string;
+  insideGeofence: boolean;
+  activeGeofenceName?: string;
+  temperatureCelsius?: number;
+  speedKmh?: number;
+  cargoStatus?: string;
+  lastUpdated: string;
+}
+
 export interface Device {
   id: string;
   orgId: string;
@@ -91,6 +107,7 @@ export interface Device {
   isEncrypted: boolean;
   firewallEnabled: boolean;
   antivirusActive: boolean;
+  location?: DeviceLocation;
 }
 
 export interface EnrollmentToken {
@@ -160,6 +177,37 @@ export interface ApplicationPackage {
   approvalStatus: 'approved' | 'pending_review' | 'rejected';
   createdAt: string;
   createdBy: string;
+}
+
+export interface VerifiedSoftware {
+  id: string;
+  name: string;
+  publisher: string;
+  category: string;
+  version: string;
+  packageId: string;
+  platform: Platform;
+  source: 'Winget' | 'Homebrew' | 'APT' | 'Enterprise Play';
+  silentInstallCmd: string;
+  uninstallCmd: string;
+  hashSha256: string;
+  officialUrl: string;
+  description: string;
+  verifiedPublisher: boolean;
+  installedCount?: number;
+}
+
+export interface Geofence {
+  id: string;
+  orgId: string;
+  name: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  actionOnBreach: 'alert_only' | 'lock_device' | 'quarantine' | 'remote_wipe';
+  enabled: boolean;
+  createdAt: string;
 }
 
 export interface DeploymentJob {
@@ -254,7 +302,23 @@ export interface UserProfile {
   role: UserRole;
   department: string;
   status: 'Active' | 'Invited' | 'Suspended';
+  isDesignatedAdmin?: boolean;
+  mfaEnforced?: boolean;
+  avatarUrl?: string;
+  lastLogin?: string;
   createdAt: string;
+}
+
+export interface BulkEnrollmentItem {
+  hostname: string;
+  platform: Platform;
+  department: string;
+  branch: string;
+  assignedUser: string;
+  assignedUserEmail: string;
+  serialNumber: string;
+  assetTag?: string;
+  model?: string;
 }
 
 export interface AutomationRule {
@@ -262,7 +326,7 @@ export interface AutomationRule {
   orgId: string;
   name: string;
   description: string;
-  triggerType: 'stale_check_in' | 'compliance_failed' | 'new_enrollment' | 'schedule';
+  triggerType: 'stale_check_in' | 'compliance_failed' | 'new_enrollment' | 'schedule' | 'geofence_breach';
   scheduleCron?: string;
   conditions: Record<string, any>;
   actionType: 'send_alert' | 'lock_device' | 'assign_group' | 'sync_inventory';
@@ -274,6 +338,12 @@ export interface PatchItem {
   id: string;
   kbNumber: string;
   title: string;
+  description?: string;
+  cveList?: string[];
+  cvssScore?: number;
+  category?: string;
+  rebootRequired?: boolean;
+  powershellInstallCmd?: string;
   platform: Platform;
   severity: 'Critical' | 'Important' | 'Moderate' | 'Low';
   releaseDate: string;

@@ -31,7 +31,7 @@
     },
     "Device": {
       "title": "Device",
-      "description": "Managed endpoint inventory record",
+      "description": "Managed endpoint inventory record with hardware, OS, and geospatial telemetry",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
@@ -122,6 +122,40 @@
       },
       "required": ["id", "orgId", "name", "version", "platform", "approvalStatus"]
     },
+    "VerifiedSoftware": {
+      "title": "VerifiedSoftware",
+      "description": "Curated verified package catalog from Winget, Brew, and APT",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "publisher": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 50 },
+        "version": { "type": "string", "maxLength": 50 },
+        "packageId": { "type": "string", "maxLength": 100 },
+        "silentInstallCmd": { "type": "string", "maxLength": 300 },
+        "hashSha256": { "type": "string", "maxLength": 64 },
+        "verifiedPublisher": { "type": "boolean" }
+      },
+      "required": ["id", "name", "publisher", "packageId"]
+    },
+    "Geofence": {
+      "title": "Geofence",
+      "description": "Geographical boundary with radius and automated compliance enforcement",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "orgId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 250 },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "radiusMeters": { "type": "number" },
+        "actionOnBreach": { "type": "string", "maxLength": 50 },
+        "enabled": { "type": "boolean" }
+      },
+      "required": ["id", "orgId", "name", "latitude", "longitude", "radiusMeters", "actionOnBreach"]
+    },
     "DeploymentJob": {
       "title": "DeploymentJob",
       "description": "Staged deployment ring for software packages",
@@ -170,7 +204,7 @@
     },
     "SecurityAlert": {
       "title": "SecurityAlert",
-      "description": "Endpoint threat or noncompliance alert",
+      "description": "Endpoint threat, geofence breach, or noncompliance alert",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
@@ -226,6 +260,14 @@
     "/applications/{packageId}": {
       "schema": "ApplicationPackage",
       "description": "Approved and managed software catalog"
+    },
+    "/verifiedSoftware/{softwareId}": {
+      "schema": "VerifiedSoftware",
+      "description": "Curated verified package catalog"
+    },
+    "/geofences/{geofenceId}": {
+      "schema": "Geofence",
+      "description": "Geographical security boundaries and automated breach enforcement"
     },
     "/deployments/{deploymentId}": {
       "schema": "DeploymentJob",

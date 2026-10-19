@@ -236,6 +236,56 @@ export const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Cold-Chain & Geospatial Telematics Card */}
+              {device.location && (
+                <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                      <span className="text-cyan-400">📍</span> Cold-Chain GPS & Sensor Telematics
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
+                      device.location.insideGeofence ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                    }`}>
+                      {device.location.insideGeofence ? 'Inside Facility Geofence' : 'Transit / Boundary Breached'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Cargo Temp</span>
+                      <span className="font-mono font-bold text-emerald-400 text-sm">
+                        {device.location.temperatureCelsius !== undefined ? `${device.location.temperatureCelsius}°C` : 'Ambient'}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Current Speed</span>
+                      <span className="font-mono font-bold text-slate-200 text-sm">
+                        {device.location.speedKmh ? `${device.location.speedKmh} km/h` : '0 km/h (Docked)'}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Active Zone</span>
+                      <span className="font-medium text-slate-200 truncate block">
+                        {device.location.activeGeofenceName || 'Metro Manila Logistics Route'}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Cargo Mission</span>
+                      <span className="font-medium text-cyan-300 truncate block">
+                        {device.location.cargoStatus || 'Field Operations'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-400 pt-1">
+                    Coordinates: <span className="font-mono text-indigo-300">[{device.location.latitude.toFixed(4)}, {device.location.longitude.toFixed(4)}]</span> • Address: {device.location.address || 'Pasig City, Metro Manila'}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -32,15 +32,6 @@ service cloud.firestore {
       );
     }
 
-    // Helper to verify user profile or organization boundary
-    function isOrgMember(orgId) {
-      return isSignedIn() && (
-        isAdmin() ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId == orgId)
-      );
-    }
-
     // Organizations
     match /organizations/{orgId} {
       allow get: if isValidId(orgId) && isSignedIn();
@@ -105,6 +96,19 @@ service cloud.firestore {
       allow create: if isValidId(packageId) && isSignedIn();
       allow update: if isValidId(packageId) && isSignedIn();
       allow delete: if isValidId(packageId) && isAdmin();
+    }
+
+    // Curated Verified Software Catalog
+    match /verifiedSoftware/{softwareId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // Geofences
+    match /geofences/{geofenceId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
     }
 
     // Deployments

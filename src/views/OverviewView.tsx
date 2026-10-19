@@ -40,9 +40,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-100">Enterprise Unified Endpoint Fleet</h1>
+            <h1 className="text-xl font-bold text-slate-100">Coolaire Consolidated Inc. (CCI) Fleet</h1>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Fleet Healthy (83.3%)
+              Fleet Healthy (94.2%)
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { 
   Search, Shield, Bell, RefreshCw, UserCheck, 
-  Building2, LogIn, LogOut, ChevronDown, CheckCircle2 
+  Building2, LogIn, LogOut, ChevronDown, CheckCircle2, 
+  Database, Sun, Moon, Trash2, ShieldAlert, AlertTriangle 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useUEM } from '../../context/UEMContext';
+import { useTheme } from '../../context/ThemeContext';
 import { UserRole } from '../../types/uem';
+import { ClearDatabaseModal } from '../common/ClearDatabaseModal';
 
 const ALL_ROLES: UserRole[] = [
   'Super Administrator',
@@ -21,14 +24,25 @@ const ALL_ROLES: UserRole[] = [
 
 interface NavbarProps {
   onSearchSelect?: (deviceId: string) => void;
+  onOpenClearDb?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect }) => {
-  const { userProfile, activeRole, switchRole, currentUser, signInWithGoogle, logout } = useAuth();
-  const { organization, isOnline, syncAllHeartbeats, devices } = useUEM();
+export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect, onOpenClearDb }) => {
+  const { 
+    userProfile, activeRole, switchRole, currentUser, 
+    signInWithGoogle, logout, isAuthorized, unauthorizedEmail 
+  } = useAuth();
+  const { 
+    organization, isOnline, syncAllHeartbeats, devices, 
+    syncToFirestoreNow, isFirestoreSynced 
+  } = useUEM();
+  const { theme, toggleTheme } = useTheme();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isSyncingFirestore, setIsSyncingFirestore] = useState(false);
+  const [internalClearModalOpen, setInternalClearModalOpen] = useState(false);
 
   const filteredDevices = searchQuery.trim() 
     ? devices.filter(d => 
@@ -39,25 +53,42 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect }) => {
       ).slice(0, 5)
     : [];
 
+  const handleManualSync = async () => {
+    setIsSyncingFirestore(true);
+    await syncToFirestoreNow();
+    setTimeout(() => setIsSyncingFirestore(false), 1200);
+  };
+
+  const handleClearDbClick = () => {
+    if (onOpenClearDb) {
+      onOpenClearDb();
+    } else {
+      setInternalClearModalOpen(true);
+    }
+  };
+
   return (
     <header className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shrink-0 z-20">
-      {/* Left: Organization & Branch Info */}
+      {/* Left: Organization & Global Search */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-200">
-          <Building2 className="w-4 h-4 text-indigo-400" />
+        {/* Coolaire Brand Badge */}
+        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700/60 text-slate-200">
+          <div className="w-6 h-6 rounded bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center font-bold text-white text-[10px] tracking-wider shadow">
+            CCI
+          </div>
           <div className="leading-tight">
-            <span className="text-xs font-semibold text-slate-100">{organization.name}</span>
-            <span className="text-[10px] text-slate-400 block">{organization.edition}</span>
+            <span className="text-xs font-bold text-slate-100">{organization.name}</span>
+            <span className="text-[10px] text-cyan-400 font-medium block">Cold-Chain Unified Endpoint Platform</span>
           </div>
         </div>
 
         {/* Global Search Bar */}
-        <div className="relative w-72">
+        <div className="relative w-64 md:w-80">
           <div className="relative flex items-center">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search hostname, user, serial, IP..."
+              placeholder="Search fleet, reefer van, user, IP..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
@@ -68,7 +99,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect }) => {
           {searchQuery.trim() && filteredDevices.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl py-1 z-50">
               <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Matching Endpoints
+                Matching Endpoints ({filteredDevices.length})
               </div>
               {filteredDevices.map(d => (
                 <button
@@ -95,22 +126,51 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect }) => {
         </div>
       </div>
 
-      {/* Right: Actions, RBAC Simulator, User Profile */}
+      {/* Right Controls: Theme Switcher, Clear DB, Sync, RBAC & Auth */}
       <div className="flex items-center gap-3">
-        {/* Heartbeat Sync Button */}
+        
+        {/* Light / Dark Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition-colors"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-indigo-400" />
+          )}
+        </button>
+
+        {/* Clear Database Quick Button */}
+        <button
+          onClick={handleClearDbClick}
+          title="Clear or Reset Database (Admin)"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+          <span className="hidden lg:inline">Clear DB</span>
+        </button>
+
+        {/* Sync Heartbeats Button */}
         <button
           onClick={syncAllHeartbeats}
           title="Poll active agent heartbeats"
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs transition-colors border border-slate-700/60"
         >
           <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="hidden sm:inline">Sync Heartbeats</span>
+          <span className="hidden md:inline">Sync Fleet</span>
         </button>
 
-        {/* Database Online Indicator */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50 text-[11px] text-slate-300">
+        {/* Firestore Online Indicator */}
+        <div 
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50 text-[11px] text-slate-300"
+          title="Cloud Firestore Connected"
+        >
           <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-          <span className="text-[10px] font-medium text-slate-300">{isOnline ? 'Firestore Live' : 'Reconnecting'}</span>
+          <span className="text-[10px] font-medium text-slate-300 hidden sm:inline">
+            {isOnline ? 'Firestore Live' : 'Reconnecting'}
+          </span>
         </div>
 
         {/* RBAC Role Switcher */}
@@ -157,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect }) => {
               className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 transition-colors"
             >
               <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                {userProfile.displayName.charAt(0)}
+                {userProfile.displayName ? userProfile.displayName.charAt(0) : 'U'}
               </div>
               <span className="text-xs text-slate-200 font-medium max-w-[100px] truncate">
                 {userProfile.displayName}
@@ -194,7 +254,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSelect }) => {
             </div>
           )}
         </div>
+
       </div>
+
+      {/* Internal Clear Database Modal */}
+      {internalClearModalOpen && (
+        <ClearDatabaseModal onClose={() => setInternalClearModalOpen(false)} />
+      )}
     </header>
   );
 };

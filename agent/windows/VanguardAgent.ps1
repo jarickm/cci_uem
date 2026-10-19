@@ -1,21 +1,12 @@
 <#
 .SYNOPSIS
     Vanguard UEM Enterprise Windows Endpoint Agent
-    Centralized Device Enrollment, Telemetry, Policy Enforcement & Command Execution.
+    Centralized Device Enrollment, Telemetry, Policy Enforcement, Geofencing & True Windows Update.
 
 .DESCRIPTION
-    Runs as a Windows Service or Scheduled Task under SYSTEM or Administrator privilege.
-    Collects real-time hardware, operating system, network, and software inventory;
-    enforces BitLocker encryption, firewall posture, and executes authorized remote jobs.
-
-.PARAMETER ServerUrl
-    The HTTPS base endpoint of the Vanguard UEM API or Cloud Run Gateway.
-
-.PARAMETER EnrollmentToken
-    One-time expiring enrollment token for onboarding.
-
-.PARAMETER OrganizationId
-    Enterprise tenant identifier.
+    Runs as a Windows Service or Scheduled Task under SYSTEM privilege.
+    Interacts with WMI/CIM, BitLocker (manage-bde), Windows Update Agent (USOClient / PSWindowsUpdate),
+    and sends authenticated telemetry to the Vanguard UEM Cloud Gateway.
 #>
 
 [CmdletBinding()]
@@ -39,7 +30,6 @@ $ConfigDir = Join-Path $env:ProgramData "VanguardUEM"
 $ConfigFile = Join-Path $ConfigDir "agent_config.json"
 $LogFile = Join-Path $ConfigDir "agent.log"
 
-# Ensure runtime directory exists
 if (-not (Test-Path $ConfigDir)) {
     New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
 }
@@ -52,11 +42,11 @@ function Write-UEMLog {
     Add-Content -Path $LogFile -Value $logLine -ErrorAction SilentlyContinue
 }
 
-Write-UEMLog "Vanguard UEM Windows Agent $AgentVersion starting..."
+Write-UEMLog "Vanguard UEM Enterprise Windows Agent $AgentVersion starting..."
 
 # 1. Hardware & System Inventory Scan
 function Get-DeviceInventory {
-    Write-UEMLog "Collecting endpoint hardware and OS inventory..."
+    Write-UEMLog "Collecting endpoint hardware, BitLocker, and OS telemetry..."
     
     $cs = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
     $os = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
@@ -152,42 +142,98 @@ function Get-DeviceInventory {
     return $payload
 }
 
-# 2. Enrollment / Handshake
+# 2. Windows Update Servicing Trigger
+function Invoke-WindowsUpdateScan {
+    Write-UEMLog "Triggering native Windows Update Agent scan via USOClient..."
+    Start-Process -FilePath "usoclient.exe" -ArgumentList "StartScan" -NoNewWindow -Wait -ErrorAction SilentlyContinue
+    Write-UEMLog "Windows Update scan initiated."
+}
+
+# 3. Enrollment / Handshake
 function Invoke-Enrollment {
-    Write-UEMLog "Attempting endpoint enrollment with token: $EnrollmentToken"
+    Write-UEMLog "Enrolling endpoint with token: $EnrollmentToken"
     $inventory = Get-DeviceInventory
     
     $enrollBody = @{
         orgId = $OrganizationId
         token = $EnrollmentToken
         inventory = $inventory
+        hostname = $inventory.hostname
+        platform = "windows"
+        serialNumber = $inventory.serialNumber
+        osVersion = $inventory.osVersion
     } | ConvertTo-Json -Depth 6
 
-    Write-UEMLog "Enrollment payload assembled for device: $($inventory.hostname)"
-    
-    # Save local credentials
-    $deviceIdentity = @{
-        deviceId = "dev-win-" + [guid]::NewGuid().ToString().Substring(0,8)
-        orgId = $OrganizationId
-        enrolledAt = (Get-Date).ToUniversalTime().ToString("o")
-        serverUrl = $ServerUrl
+    try {
+        $response = Invoke-RestMethod -Uri "$ServerUrl/api/agent/enroll" -Method Post -Body $enrollBody -ContentType "application/json" -TimeoutSec 15
+        Write-UEMLog "Enrollment succeeded! Server Assigned ID: $($response.deviceId)"
+        $deviceIdentity = @{
+            deviceId = $response.deviceId
+            orgId = $OrganizationId
+            enrolledAt = (Get-Date).ToUniversalTime().ToString("o")
+            serverUrl = $ServerUrl
+        }
+        $deviceIdentity | ConvertTo-Json | Set-Content -Path $ConfigFile -Force
+        return $deviceIdentity
+    } catch {
+        Write-UEMLog "Gateway enrollment connection failed ($($_.Exception.Message)). Using local offline profile." "WARN"
+        $deviceIdentity = @{
+            deviceId = "dev-win-" + [guid]::NewGuid().ToString().Substring(0,8)
+            orgId = $OrganizationId
+            enrolledAt = (Get-Date).ToUniversalTime().ToString("o")
+            serverUrl = $ServerUrl
+        }
+        $deviceIdentity | ConvertTo-Json | Set-Content -Path $ConfigFile -Force
+        return $deviceIdentity
     }
-    $deviceIdentity | ConvertTo-Json | Set-Content -Path $ConfigFile -Force
-    Write-UEMLog "Device successfully enrolled! ID: $($deviceIdentity.deviceId)"
-    return $deviceIdentity
 }
 
-# 3. Main Agent Execution
+# 4. Check-in and Command Dispatch Loop
+function Invoke-CheckinLoop {
+    param($config)
+    Write-UEMLog "Sending check-in heartbeat to $ServerUrl for device $($config.deviceId)..."
+    $inv = Get-DeviceInventory
+    
+    $checkinBody = @{
+        deviceId = $config.deviceId
+        status = "Active"
+        telemetry = $inv
+    } | ConvertTo-Json -Depth 6
+
+    try {
+        $res = Invoke-RestMethod -Uri "$ServerUrl/api/agent/checkin" -Method Post -Body $checkinBody -ContentType "application/json" -TimeoutSec 10
+        Write-UEMLog "Heartbeat acknowledged by Vanguard UEM. Geofence Status: $($res.geofenceStatus)"
+        
+        # Check for remote jobs to execute
+        if ($res.commandsToExecute -and $res.commandsToExecute.Count -gt 0) {
+            foreach ($cmd in $res.commandsToExecute) {
+                Write-UEMLog "Executing remote job: $($cmd.action)"
+                if ($cmd.action -eq "windows_update_scan") {
+                    Invoke-WindowsUpdateScan
+                } elseif ($cmd.action -eq "restart") {
+                    shutdown.exe /r /t 60 /c "Vanguard UEM Scheduled Reboot"
+                } elseif ($cmd.action -eq "lock") {
+                    rundll32.exe user32.dll,LockWorkStation
+                }
+            }
+        }
+    } catch {
+        Write-UEMLog "Check-in ping unacknowledged: $($_.Exception.Message)" "WARN"
+    }
+}
+
+# Main Execution Flow
 if (Test-Path $ConfigFile) {
     $config = Get-Content $ConfigFile | ConvertFrom-Json
-    Write-UEMLog "Loaded existing device registration. DeviceID: $($config.deviceId)"
+    Write-UEMLog "Existing device registration verified. DeviceID: $($config.deviceId)"
+    Invoke-CheckinLoop -config $config
 } elseif (-not [string]::IsNullOrEmpty($EnrollmentToken)) {
     $config = Invoke-Enrollment
+    Invoke-CheckinLoop -config $config
 } else {
-    Write-UEMLog "No enrollment token provided. Generating telemetry dry-run..."
+    Write-UEMLog "No enrollment token provided. Running inventory scan dry-run..."
     $inv = Get-DeviceInventory
-    Write-UEMLog "Inventory scanned successfully: Hostname: $($inv.hostname), OS: $($inv.osVersion), CPU: $($inv.hardware.cpu)"
-    return
+    Write-UEMLog "Inventory collected: Hostname: $($inv.hostname), OS: $($inv.osVersion), CPU: $($inv.hardware.cpu)"
 }
 
-Write-UEMLog "Agent initialization complete. Monitoring heartbeat and remote command queue."
+Write-UEMLog "Agent execution cycle complete."
