@@ -78,6 +78,17 @@ export interface DeviceLocation {
   lastUpdated: string;
 }
 
+export interface AgentAutoStartConfig {
+  enabled: boolean;
+  method: 'windows_service' | 'launch_daemon' | 'systemd' | 'boot_receiver_foreground' | 'mdm_supervised_daemon';
+  serviceName: string;
+  status: 'Running' | 'Active' | 'Registered';
+  bootTrigger: 'On System Boot (Pre-Login)' | 'On User Logon' | 'Instant Re-spawn Watchdog';
+  crashAutoRestart: boolean;
+  watchdogIntervalSec: number;
+  lastStartedAt: string;
+}
+
 export interface Device {
   id: string;
   orgId: string;
@@ -108,6 +119,7 @@ export interface Device {
   firewallEnabled: boolean;
   antivirusActive: boolean;
   location?: DeviceLocation;
+  autoStartConfig?: AgentAutoStartConfig;
 }
 
 export interface EnrollmentToken {

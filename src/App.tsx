@@ -32,6 +32,7 @@ import { BulkEnrollmentModal } from './components/common/BulkEnrollmentModal';
 import { ClearDatabaseModal } from './components/common/ClearDatabaseModal';
 import { CreatePolicyModal } from './components/common/CreatePolicyModal';
 import { RemoteTerminalModal } from './components/common/RemoteTerminalModal';
+import { RemoteDesktopModal } from './components/common/RemoteDesktopModal';
 import { Device, CommandAction } from './types/uem';
 import { ShieldAlert, LogOut, ArrowRight, Building2, Lock } from 'lucide-react';
 
@@ -45,6 +46,7 @@ const UEMAppContent: React.FC = () => {
   // Modals state
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [terminalDeviceId, setTerminalDeviceId] = useState<string | null>(null);
+  const [remoteDesktopDeviceId, setRemoteDesktopDeviceId] = useState<string | null>(null);
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false);
   const [commandTargetDeviceId, setCommandTargetDeviceId] = useState<string | undefined>(undefined);
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
@@ -54,6 +56,7 @@ const UEMAppContent: React.FC = () => {
 
   const selectedDevice = devices.find(d => d.id === selectedDeviceId);
   const terminalDevice = devices.find(d => d.id === terminalDeviceId);
+  const remoteDesktopDevice = devices.find(d => d.id === remoteDesktopDeviceId);
   const commandTargetDevice = devices.find(d => d.id === commandTargetDeviceId);
 
   const handleOpenCommand = (deviceId?: string) => {
@@ -159,6 +162,7 @@ const UEMAppContent: React.FC = () => {
                 onOpenBulkEnroll={() => setIsBulkEnrollModalOpen(true)}
                 onOpenCommand={(devId) => handleOpenCommand(devId)}
                 onOpenTerminal={(devId) => setTerminalDeviceId(devId)}
+                onOpenRemoteDesktop={(devId) => setRemoteDesktopDeviceId(devId)}
               />
             )}
 
@@ -177,7 +181,12 @@ const UEMAppContent: React.FC = () => {
             {currentView === 'patches' && <PatchManagementView />}
             {currentView === 'compliance' && <SecurityComplianceView />}
             {currentView === 'geofencing' && <GeofencingView />}
-            {currentView === 'remote_actions' && <RemoteActionsView onOpenCommandModal={() => handleOpenCommand()} />}
+            {currentView === 'remote_actions' && (
+              <RemoteActionsView 
+                onOpenCommandModal={() => handleOpenCommand()} 
+                onOpenRemoteDesktop={(devId) => setRemoteDesktopDeviceId(devId)}
+              />
+            )}
             {currentView === 'automation' && <AutomationView />}
             {currentView === 'reports' && <ReportsView />}
             {currentView === 'alerts' && <AlertsView />}
@@ -190,12 +199,22 @@ const UEMAppContent: React.FC = () => {
         </main>
       </div>
 
+      {/* Interactive Remote Desktop Modal */}
+      {remoteDesktopDevice && (
+        <RemoteDesktopModal
+          device={remoteDesktopDevice}
+          onClose={() => setRemoteDesktopDeviceId(null)}
+          onDispatchCommand={handleQuickCommand}
+        />
+      )}
+
       {/* 9-Tab Device Details Modal */}
       {selectedDevice && (
         <DeviceDetailsModal
           device={selectedDevice}
           onClose={() => setSelectedDeviceId(null)}
           onDispatchCommand={handleQuickCommand}
+          onOpenRemoteDesktop={(devId) => setRemoteDesktopDeviceId(devId)}
         />
       )}
 
@@ -204,6 +223,7 @@ const UEMAppContent: React.FC = () => {
         <RemoteTerminalModal
           device={terminalDevice}
           onClose={() => setTerminalDeviceId(null)}
+          onOpenRemoteDesktop={(devId) => setRemoteDesktopDeviceId(devId)}
         />
       )}
 

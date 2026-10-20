@@ -9,9 +9,14 @@ import { useUEM } from '../../context/UEMContext';
 interface RemoteTerminalModalProps {
   device: Device;
   onClose: () => void;
+  onOpenRemoteDesktop?: (deviceId: string) => void;
 }
 
-export const RemoteTerminalModal: React.FC<RemoteTerminalModalProps> = ({ device, onClose }) => {
+export const RemoteTerminalModal: React.FC<RemoteTerminalModalProps> = ({ 
+  device, 
+  onClose,
+  onOpenRemoteDesktop 
+}) => {
   const { executeRemoteTerminal, dispatchCommand } = useUEM();
   const [activeMode, setActiveMode] = useState<'terminal' | 'screen'>('terminal');
   const [inputCommand, setInputCommand] = useState('');
@@ -188,41 +193,86 @@ Volume C: [OSDisk]
         ) : (
           /* Live Screen View Mode */
           <div className="flex-1 flex flex-col p-6 items-center justify-center bg-slate-950 space-y-4">
-            <div className="relative w-full max-w-2xl aspect-video bg-slate-900 rounded-xl border border-slate-800 shadow-2xl flex flex-col overflow-hidden">
-              <div className="h-7 bg-slate-950 px-3 flex items-center justify-between border-b border-slate-800 text-[11px] text-slate-400 font-mono">
-                <span>{device.hostname} — Desktop Session (1920x1080 @ 60Hz)</span>
-                <span className="text-emerald-400 font-sans font-semibold">Live Feed</span>
-              </div>
-              <div className="flex-1 bg-slate-950/80 flex flex-col items-center justify-center p-8 text-center space-y-3">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                  <Monitor className="w-8 h-8" />
+            <div className="relative w-full max-w-3xl aspect-video bg-slate-900 rounded-xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+              <div className="h-8 bg-slate-950 px-4 flex items-center justify-between border-b border-slate-800 text-[11px] text-slate-300 font-mono">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{device.hostname} — Live Display :0 (1920x1080 @ 60 FPS)</span>
                 </div>
-                <h4 className="text-sm font-bold text-slate-200">Interactive Remote Desktop Stream Ready</h4>
-                <p className="text-xs text-slate-400 max-w-md">
-                  WebRTC peer channel initialized. User session active on display :0 ({device.assignedUser}).
-                </p>
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    onClick={() => dispatchCommand(device.id, 'lock')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
-                  >
-                    <Lock className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Lock Remote Screen</span>
-                  </button>
-                  <button
-                    onClick={() => dispatchCommand(device.id, 'restart')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
-                  >
-                    <Power className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Reboot</span>
-                  </button>
-                  <button
-                    onClick={() => dispatchCommand(device.id, 'diagnostic_bundle')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Capture Diagnostics</span>
-                  </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-cyan-400">14ms latency</span>
+                  <span className="text-emerald-400 font-sans font-semibold">WebRTC Active</span>
+                </div>
+              </div>
+
+              {/* Interactive Virtual OS Stream Canvas */}
+              <div className="flex-1 bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-950 relative p-6 flex flex-col justify-between overflow-hidden">
+                {/* Simulated Desktop Window */}
+                <div className="bg-slate-900/90 border border-cyan-500/40 rounded-lg p-3 shadow-xl max-w-md backdrop-blur">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-[11px]">
+                    <span className="font-bold text-slate-100 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                      Coolaire ColdTrace™ Telematics Subsystem
+                    </span>
+                    <span className="text-emerald-400 font-mono font-bold">ONLINE</span>
+                  </div>
+                  <div className="pt-2 grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Cargo Temp</span>
+                      <span className="text-lg font-bold font-mono text-cyan-400">
+                        {device.location?.temperatureCelsius ?? -18.4}°C
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Auto-Start Daemon</span>
+                      <span className="text-xs font-bold text-emerald-400">Active (Automatic)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Central Overlay Call to Action */}
+                <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-400 shadow-xl">
+                    <Monitor className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-slate-100">Interactive Remote Desktop Ready</h4>
+                    <p className="text-xs text-slate-300 max-w-sm mt-0.5">
+                      Full bidirectional keyboard, mouse, clipboard, and taskbar stream for {device.hostname}.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    {onOpenRemoteDesktop ? (
+                      <button
+                        onClick={() => {
+                          onClose();
+                          onOpenRemoteDesktop(device.id);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all hover:scale-105"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                        <span>Launch Full Interactive Remote Desktop</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => dispatchCommand(device.id, 'lock')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Lock Screen</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom Taskbar Simulation */}
+                <div className="h-7 bg-slate-950/90 rounded border border-slate-800 flex items-center justify-between px-3 text-[10px] text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 bg-cyan-400 rounded-sm" />
+                    <span>Windows 11 Enterprise (CCIAgent v3.1.2)</span>
+                  </div>
+                  <span className="font-mono text-slate-300">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             </div>

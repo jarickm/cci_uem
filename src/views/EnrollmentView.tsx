@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   QrCode, Plus, Copy, Check, Shield, 
   Terminal, Laptop, AlertCircle, Trash2, Key, 
-  Upload, Layers, Download, FileSpreadsheet, Smartphone 
+  Upload, Layers, Download, FileSpreadsheet, Smartphone, Zap 
 } from 'lucide-react';
 import { useUEM } from '../context/UEMContext';
 import { Platform } from '../types/uem';
@@ -174,6 +174,89 @@ export const EnrollmentView: React.FC<EnrollmentViewProps> = ({ onOpenEnrollModa
           <Upload className="w-4 h-4" />
           <span>Open Bulk Fleet Importer</span>
         </button>
+      </div>
+
+      {/* 24/7 Auto-Start Architecture Guide */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-100 flex items-center gap-2">
+                <span>24/7 Persistent Auto-Start Service Configuration</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono">
+                  ALL PLATFORMS SUPPORTED
+                </span>
+              </h2>
+              <p className="text-[11px] text-slate-400">
+                Guarantees endpoint connectivity and cold-chain telematics by launching before user login on system boot
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] text-emerald-400 font-mono font-medium flex items-center gap-1">
+            <Check className="w-3.5 h-3.5" /> Auto-restart watchdog enabled
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+          {/* Windows Service */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-blue-400">Windows 11 / 10 Service</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-mono">sc.exe</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Installs Win32 System Service (<code className="text-slate-200">CCIAgent</code>) configured with <code className="text-slate-200">start= auto</code> running under NT AUTHORITY\SYSTEM.
+            </p>
+            <div className="p-2 bg-slate-900 rounded font-mono text-[10px] text-slate-300 border border-slate-800">
+              sc.exe create "CCIAgent" binPath= "...\CCIAgent.exe --daemon" start= auto
+            </div>
+          </div>
+
+          {/* Android Mobile */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-emerald-400">Android Reefer Tablets</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">Knox DPC</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Registered with <code className="text-slate-200">RECEIVE_BOOT_COMPLETED</code> broadcast receiver and persistent foreground notification.
+            </p>
+            <div className="p-2 bg-slate-900 rounded font-mono text-[10px] text-slate-300 border border-slate-800">
+              intent-filter: android.intent.action.BOOT_COMPLETED
+            </div>
+          </div>
+
+          {/* macOS LaunchDaemon */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-purple-400">macOS LaunchDaemon</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-mono">plist</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Loaded into <code className="text-slate-200">/Library/LaunchDaemons</code> with <code className="text-slate-200">RunAtLoad=true</code> and <code className="text-slate-200">KeepAlive=true</code>.
+            </p>
+            <div className="p-2 bg-slate-900 rounded font-mono text-[10px] text-slate-300 border border-slate-800">
+              sudo launchctl bootstrap system .../com.coolaire.uem.agent.plist
+            </div>
+          </div>
+
+          {/* Linux Systemd */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-amber-400">Linux / Ubuntu Systemd</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono">systemctl</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Configured under <code className="text-slate-200">multi-user.target</code> with automated crash restart (<code className="text-slate-200">Restart=always</code>).
+            </p>
+            <div className="p-2 bg-slate-900 rounded font-mono text-[10px] text-slate-300 border border-slate-800">
+              sudo systemctl enable --now cci-uem-agent.service
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Active Enrollment Tokens Table */}

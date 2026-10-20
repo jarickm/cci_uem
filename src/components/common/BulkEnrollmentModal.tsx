@@ -563,6 +563,69 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
 }`}
                 </pre>
               </div>
+
+              {/* macOS LaunchDaemon Root Auto-Start Script */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Laptop className="w-4 h-4 text-purple-400" />
+                    <span className="font-bold text-slate-200">macOS Root LaunchDaemon (Boot-Time Auto-Start without GUI Login)</span>
+                  </div>
+                  <button
+                    onClick={() => copyCode(
+`sudo /bin/sh -c 'cat << "EOF" > /Library/LaunchDaemons/com.coolaire.uem.agent.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.coolaire.uem.agent</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Application Support/Coolaire/CCIAgent</string>
+        <string>--daemon</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+EOF
+chown root:wheel /Library/LaunchDaemons/com.coolaire.uem.agent.plist
+chmod 644 /Library/LaunchDaemons/com.coolaire.uem.agent.plist
+launchctl bootstrap system /Library/LaunchDaemons/com.coolaire.uem.agent.plist'`, 'macos')}
+                    className="flex items-center gap-1 text-slate-400 hover:text-white"
+                  >
+                    {copiedKey === 'macos' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'macos' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+                <pre className="p-3 bg-slate-900 font-mono text-[10px] text-slate-300 rounded-lg overflow-x-auto border border-slate-800">
+{`sudo launchctl bootstrap system /Library/LaunchDaemons/com.coolaire.uem.agent.plist`}
+                </pre>
+              </div>
+
+              {/* Linux Systemd Service */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-amber-400" />
+                    <span className="font-bold text-slate-200">Linux / Ubuntu Systemd Auto-Start Unit (cci-uem-agent.service)</span>
+                  </div>
+                  <button
+                    onClick={() => copyCode(
+`sudo systemctl enable --now cci-uem-agent.service`, 'linux')}
+                    className="flex items-center gap-1 text-slate-400 hover:text-white"
+                  >
+                    {copiedKey === 'linux' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'linux' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+                <pre className="p-3 bg-slate-900 font-mono text-[10px] text-slate-300 rounded-lg overflow-x-auto border border-slate-800">
+{`sudo systemctl enable --now cci-uem-agent.service`}
+                </pre>
+              </div>
             </div>
           )}
 

@@ -91,6 +91,7 @@ interface UEMContextType {
   clearDatabase: (mode: 'wipe_all' | 'reset_seed' | 'clear_queue') => Promise<void>;
 
   // Utilities & Export
+  addAuditEvent: (eventData: Partial<AuditEvent> & { targetType?: string; targetName?: string }) => void;
   exportCsv: (dataType: 'devices' | 'compliance' | 'audit' | 'commands' | 'patches' | 'geofences') => void;
   syncAllHeartbeats: () => void;
   syncToFirestoreNow: () => Promise<void>;
@@ -569,6 +570,20 @@ BIOS Version:              ${targetDev?.hardware.biosVersion || 'Dell UEFI 1.14.
         { id: 'app-02', name: 'CrowdStrike Falcon Sensor', publisher: 'CrowdStrike Inc.', version: '7.18', isApproved: true },
       ],
       appliedPolicyIds: ['pol-sec-01'],
+      autoStartConfig: deviceData.autoStartConfig || {
+        enabled: true,
+        method: deviceData.platform === 'android' ? 'boot_receiver_foreground' :
+                deviceData.platform === 'macos' ? 'launch_daemon' :
+                deviceData.platform === 'linux' ? 'systemd' : 'windows_service',
+        serviceName: deviceData.platform === 'android' ? 'CoolaireUEMForegroundService' :
+                     deviceData.platform === 'macos' ? 'com.coolaire.uem.agent' :
+                     deviceData.platform === 'linux' ? 'cci-uem-agent.service' : 'CCIAgent',
+        status: 'Running',
+        bootTrigger: 'On System Boot (Pre-Login)',
+        crashAutoRestart: true,
+        watchdogIntervalSec: 5,
+        lastStartedAt: new Date().toISOString(),
+      },
       ...deviceData,
     };
 
@@ -674,6 +689,16 @@ BIOS Version:              ${targetDev?.hardware.biosVersion || 'Dell UEFI 1.14.
           { id: 'app-02', name: 'CrowdStrike Falcon Sensor', publisher: 'CrowdStrike Inc.', version: '7.18.18204.0', isApproved: true },
         ],
         appliedPolicyIds: ['pol-sec-01'],
+        autoStartConfig: {
+          enabled: true,
+          method: isAndroid ? 'boot_receiver_foreground' : isMac ? 'launch_daemon' : item.platform === 'linux' ? 'systemd' : 'windows_service',
+          serviceName: isAndroid ? 'CoolaireUEMForegroundService' : isMac ? 'com.coolaire.uem.agent' : item.platform === 'linux' ? 'cci-uem-agent.service' : 'CCIAgent',
+          status: 'Running',
+          bootTrigger: 'On System Boot (Pre-Login)',
+          crashAutoRestart: true,
+          watchdogIntervalSec: 5,
+          lastStartedAt: new Date().toISOString(),
+        },
       };
 
       newDevices.push(newDev);
@@ -992,6 +1017,22 @@ BIOS Version:              ${targetDev?.hardware.biosVersion || 'Dell UEFI 1.14.
     setAuditEvents(prev => [newEvent, ...prev]);
   };
 
+  const addAuditEvent = (eventData: Partial<AuditEvent> & { targetType?: string; targetName?: string }) => {
+    const eventId = `aud-${Date.now().toString(36)}`;
+    const newEvent: AuditEvent = {
+      id: eventId,
+      orgId: eventData.orgId || orgId,
+      actorEmail: eventData.actorEmail || userProfile.email,
+      action: eventData.action || 'system_audit',
+      targetResource: eventData.targetType || eventData.targetResource || 'device',
+      targetId: eventData.targetId || '',
+      outcome: eventData.outcome || 'Success',
+      timestamp: new Date().toISOString(),
+      details: eventData.details || '',
+    };
+    setAuditEvents(prev => [newEvent, ...prev]);
+  };
+
   const exportCsv = (dataType: 'devices' | 'compliance' | 'audit' | 'commands' | 'patches' | 'geofences') => {
     let headers: string[] = [];
     let rows: string[][] = [];
@@ -1083,6 +1124,7 @@ BIOS Version:              ${targetDev?.hardware.biosVersion || 'Dell UEFI 1.14.
         revokeEnrollmentToken,
         bulkEnrollDevices,
         clearDatabase,
+        addAuditEvent,
         exportCsv,
         syncAllHeartbeats,
         syncToFirestoreNow,

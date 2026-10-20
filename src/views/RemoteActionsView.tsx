@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { 
   Terminal, Play, CheckCircle2, AlertTriangle, 
-  Clock, XCircle, ShieldAlert, Check, Plus, Filter, Search, RotateCcw
+  Clock, XCircle, ShieldAlert, Check, Plus, Filter, Search, RotateCcw,
+  Monitor, Zap, Laptop, Smartphone 
 } from 'lucide-react';
 import { useUEM } from '../context/UEMContext';
 import { useAuth } from '../context/AuthContext';
 
 interface RemoteActionsViewProps {
   onOpenCommandModal: () => void;
+  onOpenRemoteDesktop?: (deviceId: string) => void;
 }
 
-export const RemoteActionsView: React.FC<RemoteActionsViewProps> = ({ onOpenCommandModal }) => {
-  const { commands, approveCommand, cancelCommand, executeCommandNow, exportCsv } = useUEM();
+export const RemoteActionsView: React.FC<RemoteActionsViewProps> = ({ 
+  onOpenCommandModal,
+  onOpenRemoteDesktop 
+}) => {
+  const { commands, approveCommand, cancelCommand, executeCommandNow, exportCsv, devices } = useUEM();
   const { hasPermission } = useAuth();
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedCommandLog, setSelectedCommandLog] = useState<string | null>(null);
@@ -24,9 +29,11 @@ export const RemoteActionsView: React.FC<RemoteActionsViewProps> = ({ onOpenComm
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">Remote Actions & Command Queue</h1>
+          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <span>Remote Desktop, Shell & Command Queue</span>
+          </h1>
           <p className="text-xs text-slate-400">
-            Durable, idempotent execution pipeline with approval gates for privileged actions
+            Bidirectional encrypted WebRTC remote control, interactive terminals, and durable execution pipeline
           </p>
         </div>
 
@@ -44,6 +51,60 @@ export const RemoteActionsView: React.FC<RemoteActionsViewProps> = ({ onOpenComm
             <Plus className="w-4 h-4" />
             <span>Dispatch Command</span>
           </button>
+        </div>
+      </div>
+
+      {/* Live Remote Desktop Quick Launch Station */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-slate-900 to-cyan-950/40 border border-indigo-500/30 space-y-3 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+              <Monitor className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <span>Live Interactive Remote Desktop Stream</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                  WEBRTC P2P READY
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Directly connect to any live computer or mobile endpoint with mouse, keyboard, clipboard & diagnostics
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-cyan-400 font-mono">
+            {devices.filter(d => d.status === 'Active').length} Live Endpoints Online
+          </span>
+        </div>
+
+        {/* Quick Connect Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          {devices.slice(0, 4).map(dev => (
+            <div 
+              key={dev.id} 
+              className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between space-y-2 hover:border-slate-700 transition-colors"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-slate-200 truncate">{dev.hostname}</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <p className="text-[11px] text-slate-400 truncate">{dev.assignedUser}</p>
+                <p className="text-[10px] text-cyan-400 font-mono">{dev.ipAddress}</p>
+              </div>
+
+              {onOpenRemoteDesktop && (
+                <button
+                  onClick={() => onOpenRemoteDesktop(dev.id)}
+                  className="w-full py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow transition-all hover:scale-102"
+                >
+                  <Monitor className="w-3.5 h-3.5" />
+                  <span>Connect Desktop</span>
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 

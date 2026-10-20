@@ -1,1 +1,140 @@
 @import "tailwindcss";
+
+/* -------------------------------------------------------------
+   CCI UEM - Executive Theme System (Coolaire Consolidated Inc.)
+   Default: Modern Clean Light Mode
+   Optional: Enterprise Dark Mode
+------------------------------------------------------------- */
+
+html.light, 
+body.light, 
+.light {
+  color-scheme: light;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Light Mode Surface Transformations */
+.light .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-slate-950\/90,
+.light .bg-slate-950\/85,
+.light .bg-slate-950\/80,
+.light .bg-slate-950\/60,
+.light .bg-slate-950\/40,
+.light .bg-slate-950\/30 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-slate-900\/80,
+.light .bg-slate-900\/60,
+.light .bg-slate-900\/50,
+.light .bg-slate-900\/40 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .bg-slate-800\/90,
+.light .bg-slate-800\/80,
+.light .bg-slate-800\/60,
+.light .bg-slate-800\/50 {
+  background-color: #f8fafc !important;
+}
+
+/* Light Mode Borders & Dividers */
+.light .border-slate-800,
+.light .border-slate-800\/80,
+.light .border-slate-800\/60,
+.light .border-slate-700,
+.light .border-slate-700\/60,
+.light .border-slate-700\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Mode Typography */
+.light .text-slate-100 {
+  color: #0f172a !important; /* deep slate 900 for headings */
+}
+
+.light .text-slate-200 {
+  color: #1e293b !important; /* rich slate 800 for high-emphasis text */
+}
+
+.light .text-slate-300 {
+  color: #334155 !important; /* slate 700 for body labels */
+}
+
+.light .text-slate-400 {
+  color: #64748b !important; /* slate 500 for secondary text and icons */
+}
+
+/* Light Mode Hover and Interactive States */
+.light .hover\:bg-slate-800:hover,
+.light .hover\:bg-slate-800\/60:hover,
+.light .hover\:bg-slate-800\/50:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.light .hover\:bg-slate-700:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+.light .hover\:text-slate-200:hover {
+  color: #1e293b !important;
+}
+
+/* Form controls in Light mode */
+.light input[type="text"],
+.light input[type="search"],
+.light input[type="number"],
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Scrollbar styling for Light & Dark */
+.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #020617;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

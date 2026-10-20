@@ -3,7 +3,7 @@ import {
   Laptop, Search, Filter, Download, Terminal, 
   Plus, CheckSquare, Square, RefreshCw, Lock, 
   Power, ShieldCheck, AlertCircle, ChevronRight, X, 
-  MapPin, CheckCircle2 
+  MapPin, CheckCircle2, Monitor, Zap 
 } from 'lucide-react';
 import { useUEM } from '../context/UEMContext';
 import { Platform, DeviceStatus, ComplianceStatus } from '../types/uem';
@@ -14,6 +14,7 @@ interface DevicesViewProps {
   onOpenBulkEnroll?: () => void;
   onOpenCommand: (deviceId?: string) => void;
   onOpenTerminal?: (deviceId: string) => void;
+  onOpenRemoteDesktop?: (deviceId: string) => void;
 }
 
 export const DevicesView: React.FC<DevicesViewProps> = ({ 
@@ -21,7 +22,8 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
   onOpenEnroll,
   onOpenBulkEnroll,
   onOpenCommand,
-  onOpenTerminal 
+  onOpenTerminal,
+  onOpenRemoteDesktop 
 }) => {
   const { devices, exportCsv, dispatchCommand } = useUEM();
   const [searchTerm, setSearchTerm] = useState('');
@@ -247,14 +249,20 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
                       </button>
                     </td>
 
-                    {/* Hostname */}
+                    {/* Hostname & Auto-Start Status */}
                     <td className="px-4 py-3">
                       <div className="font-bold text-slate-100 flex items-center gap-1.5">
                         <span>{device.hostname}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {device.hardware.manufacturer} {device.hardware.model}
-                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {device.hardware.manufacturer} {device.hardware.model}
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20 flex items-center gap-0.5" title="Daemon launches automatically on system boot prior to login">
+                          <Zap className="w-2.5 h-2.5" />
+                          <span>Auto-Start</span>
+                        </span>
+                      </div>
                     </td>
 
                     {/* Platform & OS */}
@@ -334,6 +342,16 @@ export const DevicesView: React.FC<DevicesViewProps> = ({
                     {/* Action Menu */}
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
+                        {onOpenRemoteDesktop && (
+                          <button
+                            onClick={() => onOpenRemoteDesktop(device.id)}
+                            className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold flex items-center gap-1 shadow-sm transition-all"
+                            title="Open Real-Time Interactive Remote Desktop"
+                          >
+                            <Monitor className="w-3 h-3" />
+                            <span>Desktop</span>
+                          </button>
+                        )}
                         {onOpenTerminal && (
                           <button
                             onClick={() => onOpenTerminal(device.id)}

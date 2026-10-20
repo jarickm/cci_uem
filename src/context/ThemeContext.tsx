@@ -14,7 +14,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem('cci_uem_theme');
     if (saved === 'light' || saved === 'dark') return saved;
-    return 'dark'; // Default to enterprise dark mode
+    return 'light'; // Default to clean, modern executive light mode
   });
 
   useEffect(() => {
